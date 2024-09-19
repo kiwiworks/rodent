@@ -1,0 +1,15 @@
+package api
+
+import "rodent/system/opt"
+
+func Protected() opt.Option[Options] {
+	return func(opt *Options) {
+		opt.Protected = true
+	}
+}
+
+func Tags(tags ...string) opt.Option[Options] {
+	return func(opt *Options) {
+		opt.Tags = tags
+	}
+}
