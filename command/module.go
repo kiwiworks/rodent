@@ -1,6 +1,6 @@
 package command
 
-import "rodent/module"
+import "github.com/kiwiworks/rodent/module"
 
 func Module() module.Module {
 	return module.New(

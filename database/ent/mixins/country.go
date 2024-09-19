@@ -5,7 +5,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 
-	"rodent/slices"
+	"github.com/kiwiworks/rodent/slices"
 
 	"github.com/biter777/countries"
 )

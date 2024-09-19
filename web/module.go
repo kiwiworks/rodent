@@ -1,8 +1,8 @@
 package web
 
 import (
-	"rodent/module"
-	"rodent/web/server"
+	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/web/server"
 )
 
 func Module() module.Module {

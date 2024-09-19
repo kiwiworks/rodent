@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"rodent/slices"
-	"rodent/system/errors"
+	"github.com/kiwiworks/rodent/slices"
+	"github.com/kiwiworks/rodent/system/errors"
 )
 
 type SurrealDBConfig struct {

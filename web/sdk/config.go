@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 type (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/surrealdb/surrealdb.go"
 
-	"rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/errors"
 )
 
 type Client struct {

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/surrealdb/surrealdb.go"
 
-	"rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/errors"
 )
 
 type IEntity[T any] interface {

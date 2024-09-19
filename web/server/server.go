@@ -7,9 +7,9 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"rodent/system/errors"
-	"rodent/system/logger"
-	"rodent/web/api"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/web/api"
 )
 
 type (

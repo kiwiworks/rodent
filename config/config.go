@@ -5,7 +5,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	"rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/errors"
 )
 
 func FromEnv[T any](prefixes ...string) (T, error) {

@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/logger"
 )
 
 func convertToHydratable(maybeHydratable any) any {

@@ -3,9 +3,9 @@ package cas
 import (
 	"github.com/pkg/errors"
 
-	"rodent/config"
-	"rodent/module"
-	"rodent/system/manifest"
+	"github.com/kiwiworks/rodent/config"
+	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/system/manifest"
 )
 
 func configProvider(manifest *manifest.Manifest) (*CasdoorClientConfig, error) {

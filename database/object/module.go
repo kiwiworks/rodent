@@ -3,10 +3,10 @@ package object
 import (
 	"github.com/pkg/errors"
 
-	"rodent/config"
-	"rodent/module"
-	"rodent/system/logger"
-	"rodent/system/manifest"
+	"github.com/kiwiworks/rodent/config"
+	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/manifest"
 )
 
 func configProvider(manifest *manifest.Manifest) (*StoreConfig, error) {

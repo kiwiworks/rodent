@@ -5,10 +5,10 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"rodent/config"
-	"rodent/module"
-	"rodent/system/errors"
-	"rodent/system/manifest"
+	"github.com/kiwiworks/rodent/config"
+	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/manifest"
 )
 
 func datasourceProvider(manifest *manifest.Manifest) (*Datasource, error) {

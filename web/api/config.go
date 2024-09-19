@@ -1,6 +1,6 @@
 package api
 
-import "rodent/system/opt"
+import "github.com/kiwiworks/rodent/system/opt"
 
 type Config struct {
 	ErrorConverter func(err error) error

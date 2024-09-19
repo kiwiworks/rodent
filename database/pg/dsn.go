@@ -9,8 +9,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"rodent/system/errors"
-	"rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/logger"
 )
 
 type ConnectionSettings struct {

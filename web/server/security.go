@@ -5,7 +5,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 type SecurityConfig struct {

@@ -9,7 +9,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/logger"
 )
 
 type Middleware struct {

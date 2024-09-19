@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"rodent/system/errors"
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 type Client struct {

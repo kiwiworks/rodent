@@ -8,8 +8,8 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 
-	"rodent/system/opt"
-	"rodent/web/http"
+	"github.com/kiwiworks/rodent/system/opt"
+	"github.com/kiwiworks/rodent/web/http"
 )
 
 type (

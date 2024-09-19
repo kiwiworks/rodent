@@ -6,8 +6,8 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"rodent/system/logger"
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 func registerLifecycle[T OnStartStop](impl T, lifecycle fx.Lifecycle) {

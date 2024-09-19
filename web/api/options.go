@@ -1,6 +1,6 @@
 package api
 
-import "rodent/system/opt"
+import "github.com/kiwiworks/rodent/system/opt"
 
 func Protected() opt.Option[Options] {
 	return func(opt *Options) {

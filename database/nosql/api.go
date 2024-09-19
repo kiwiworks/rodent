@@ -3,7 +3,7 @@ package nosql
 import (
 	"context"
 
-	"rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/errors"
 )
 
 func (c *Client) Create(ctx context.Context, id string, data any) (any, error) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 func ApiKeyAuth(headerName, headerValue string) opt.Option[Config] {

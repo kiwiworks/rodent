@@ -7,10 +7,10 @@ import (
 	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 
-	"rodent/module"
-	"rodent/system/logger"
-	"rodent/system/manifest"
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/manifest"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 type App struct {

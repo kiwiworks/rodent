@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/cors"
 	"go.uber.org/fx"
 
-	"rodent/cas"
-	"rodent/system/logger"
-	"rodent/system/manifest"
+	"github.com/kiwiworks/rodent/cas"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/manifest"
 )
 
 type Router struct {

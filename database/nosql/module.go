@@ -3,10 +3,10 @@ package nosql
 import (
 	"net/url"
 
-	"rodent/config"
-	"rodent/module"
-	"rodent/system/errors"
-	"rodent/system/manifest"
+	"github.com/kiwiworks/rodent/config"
+	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/manifest"
 )
 
 func configProvider(manifest *manifest.Manifest) (*SurrealDBConfig, error) {

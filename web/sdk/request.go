@@ -13,9 +13,9 @@ import (
 
 	"github.com/google/go-querystring/query"
 
-	"rodent/system/errors"
-	"rodent/system/opt"
-	"rodent/web/header"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/opt"
+	"github.com/kiwiworks/rodent/web/header"
 )
 
 type Request struct {

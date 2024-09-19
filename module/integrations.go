@@ -3,8 +3,8 @@ package module
 import (
 	"go.uber.org/fx"
 
-	"rodent/slices"
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/slices"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 func annotateAndAppend(groupTag string, factories []any, opt *Module) {

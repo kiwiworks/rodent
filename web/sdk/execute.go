@@ -12,9 +12,9 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
-	"rodent/system/errors"
-	"rodent/system/logger"
-	"rodent/web/header"
+	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/web/header"
 )
 
 func checkRequestErrors(request *Request) error {

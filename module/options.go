@@ -1,8 +1,8 @@
 package module
 
 import (
-	"rodent/slices"
-	"rodent/system/opt"
+	"github.com/kiwiworks/rodent/slices"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 func Public(providers ...any) opt.Option[Module] {

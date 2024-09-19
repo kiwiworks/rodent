@@ -7,8 +7,8 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"rodent/system/logger"
-	"rodent/system/manifest"
+	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/system/manifest"
 )
 
 type Root struct {
