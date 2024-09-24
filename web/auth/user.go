@@ -13,5 +13,12 @@ type ResolvedUser struct {
 }
 
 func (r *ResolvedUser) Resolve(ctx huma.Context) []error {
-
+	user := userFromContext(ctx.Context())
+	if user == nil {
+		return []error{
+			huma.Error401Unauthorized("Invalid credentials"),
+		}
+	}
+	*r = *user
+	return nil
 }
