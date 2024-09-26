@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/go-querystring/query"
 
-	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/errors"
 	"github.com/kiwiworks/rodent/system/opt"
 	"github.com/kiwiworks/rodent/web/header"
 )

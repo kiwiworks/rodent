@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 
-	"github.com/kiwiworks/rodent/system/errors"
-	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/errors"
+	"github.com/kiwiworks/rodent/logger"
 )
 
 type Manifest struct {

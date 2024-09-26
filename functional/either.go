@@ -3,7 +3,7 @@ package functional
 import (
 	"encoding/json"
 
-	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/errors"
 )
 
 type Either[L, R any] struct {

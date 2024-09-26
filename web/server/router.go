@@ -8,7 +8,7 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/kiwiworks/rodent/cas"
-	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 

@@ -4,8 +4,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/kiwiworks/rodent/config"
+	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/module"
-	"github.com/kiwiworks/rodent/system/logger"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 

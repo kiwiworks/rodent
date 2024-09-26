@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/errors"
 )
 
 // pathAndKey extracts the first and second elements of the URL path.

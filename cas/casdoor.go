@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 
-	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/errors"
 )
 
 type CasdoorClient struct {

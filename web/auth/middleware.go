@@ -4,7 +4,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/zap"
 
-	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/logger"
 )
 
 type Middleware struct {
