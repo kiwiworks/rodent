@@ -13,7 +13,7 @@ import (
 
 func datasourceProvider(manifest *manifest.Manifest) (*Datasource, error) {
 	type EnvironmentConfig struct {
-		Dsn string `split_words:"true"`
+		Dsn string `split_words:"true" required:"true"`
 	}
 	env, err := config.FromEnv[EnvironmentConfig](manifest.Application, "postgres")
 	if err != nil {
