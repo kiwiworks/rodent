@@ -5,6 +5,7 @@ import (
 )
 
 type Provider interface {
+	Name() string
 	UserResolver(ctx huma.Context) (*ResolvedUser, error)
 	AuthMiddleware(ctx huma.Context, next func(ctx huma.Context))
 }

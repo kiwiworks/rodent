@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/danielgtaylor/huma/v2"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
 
 	"github.com/kiwiworks/rodent/logger"
@@ -12,11 +13,28 @@ type Middleware struct {
 	providers map[string]Provider
 }
 
+type Params struct {
+	fx.In
+	API       huma.API
+	Providers []Provider
+}
+
+func NewMiddleware(params Params) *Middleware {
+	providers := make(map[string]Provider)
+	for _, provider := range params.Providers {
+		providers[provider.Name()] = provider
+	}
+	return &Middleware{
+		api:       params.API,
+		providers: providers,
+	}
+}
+
 func (m *Middleware) writeError(ctx huma.Context, status int, msg string, err error) {
 	op := ctx.Operation()
 	log := logger.New().With(zap.String("http.method", ctx.Method()), zap.String("http.path", op.Path), zap.Int("http.status", status))
 
-	if err := huma.WriteErr(m.api, ctx, status, msg, err); err != nil {
+	if err = huma.WriteErr(m.api, ctx, status, msg, err); err != nil {
 		log.Error("failed to write error response", zap.Error(err))
 	}
 }

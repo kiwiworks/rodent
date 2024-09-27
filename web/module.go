@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/kiwiworks/rodent/module"
+	"github.com/kiwiworks/rodent/web/auth"
 	"github.com/kiwiworks/rodent/web/server"
 )
 
@@ -15,5 +16,6 @@ func Module() module.Module {
 			server.New,
 		),
 		module.Service[server.Server](),
+		module.SubModules(auth.Module),
 	)
 }

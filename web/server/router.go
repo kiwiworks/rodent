@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/cors"
 	"go.uber.org/fx"
 
-	"github.com/kiwiworks/rodent/cas"
+	"complex/cas"
 	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
