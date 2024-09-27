@@ -1,9 +1,9 @@
 package command
 
 import (
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/kiwiworks/rodent/errors"
 	"github.com/kiwiworks/rodent/system/opt"
 )
 
@@ -42,7 +42,7 @@ func New(name string, short string, long string, opts ...opt.Option[Command]) *C
 }
 
 func (c *Command) asCobraCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:        c.Name,
 		Aliases:    nil,
 		SuggestFor: c.SuggestFor,
@@ -51,12 +51,12 @@ func (c *Command) asCobraCommand() *cobra.Command {
 		Long:       c.Long,
 		Example:    c.Example,
 		//ValidArgs:  []string{},
-		//ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) (
-		//	[]string,
-		//	cobra.ShellCompDirective,
-		//) {
-		//	return nil, cobra.ShellCompDirectiveNoFileComp
-		//},
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) (
+			[]string,
+			cobra.ShellCompDirective,
+		) {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		},
 		Args:                   func(cmd *cobra.Command, args []string) error { return nil },
 		ArgAliases:             []string{},
 		BashCompletionFunction: "",
@@ -64,21 +64,15 @@ func (c *Command) asCobraCommand() *cobra.Command {
 		Annotations:            c.Annotations,
 		Version:                "",
 		PersistentPreRun:       nil,
-		PersistentPreRunE:      nil,
-		PreRun:                 nil,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			for name, handler := range c.FlagHandlers {
-				if err := handler(cmd); err != nil {
-					return errors.Wrapf(err, "failed to handle flag parsing for '%s'", name)
-				}
-			}
-
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.MarkFlagsOneRequired(c.RequiredFlags...)
 			cmd.MarkFlagsMutuallyExclusive(c.MutuallyExclusiveFlags...)
 
 			return nil
 		},
-		Run: nil,
+		PreRun:  nil,
+		PreRunE: nil,
+		Run:     nil,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.Run(cmd, args)
 		},
@@ -98,4 +92,11 @@ func (c *Command) asCobraCommand() *cobra.Command {
 		DisableSuggestions:         false,
 		SuggestionsMinimumDistance: 0,
 	}
+	for name, handler := range c.FlagHandlers {
+		if err := handler(cmd); err != nil {
+			panic(errors.Wrapf(err, "failed to handle flag parsing for '%s'", name))
+		}
+	}
+
+	return cmd
 }
