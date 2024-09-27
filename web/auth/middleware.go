@@ -8,25 +8,22 @@ import (
 	"github.com/kiwiworks/rodent/logger"
 )
 
-type Middleware struct {
-	api       huma.API
-	providers map[string]Provider
-}
-
-type Params struct {
-	fx.In
-	API       huma.API
-	Providers []Provider
-}
-
-func NewMiddleware(params Params) *Middleware {
-	providers := make(map[string]Provider)
-	for _, provider := range params.Providers {
-		providers[provider.Name()] = provider
+type (
+	Middleware struct {
+		api       huma.API
+		providers map[string]Provider
 	}
+	MiddlewareParams struct {
+		fx.In
+		API       huma.API
+		Providers *Providers
+	}
+)
+
+func NewMiddleware(params MiddlewareParams) *Middleware {
 	return &Middleware{
 		api:       params.API,
-		providers: providers,
+		providers: params.Providers.Registry,
 	}
 }
 

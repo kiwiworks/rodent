@@ -13,28 +13,34 @@ import (
 )
 
 type (
+	Addr   string
 	Server struct {
 		server http.Server
 	}
-	Config struct {
+	Params struct {
 		fx.In
+		Addr      Addr `optional:"true"`
 		Router    *Router
 		ApiConfig *api.Config    `optional:"true"`
 		Handlers  []*api.Handler `group:"api.handler"`
 	}
 )
 
-func New(cfg Config) *Server {
-	if cfg.ApiConfig == nil {
-		cfg.ApiConfig = api.DefaultConfig()
+func New(params Params) *Server {
+	if params.ApiConfig == nil {
+		params.ApiConfig = api.DefaultConfig()
 	}
-	for _, handler := range cfg.Handlers {
-		handler.Mount(cfg.Router.api, *cfg.ApiConfig)
+	for _, handler := range params.Handlers {
+		handler.Mount(params.Router.api, *params.ApiConfig)
+	}
+	addr := params.Addr
+	if addr == "" {
+		addr = "[::1]:8080"
 	}
 	server := &Server{
 		server: http.Server{
-			Addr:    "[::1]:8080",
-			Handler: cfg.Router.mux,
+			Addr:    string(addr),
+			Handler: params.Router.mux,
 		},
 	}
 
