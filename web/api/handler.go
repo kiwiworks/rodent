@@ -18,13 +18,15 @@ type (
 		Mount   func(api huma.API, config Config)
 	}
 	Options struct {
-		Method       http.Method
-		Path         string
-		RegisterOas3 bool
-		OperationId  string
-		ContentType  string
-		Tags         []string
-		Protected    bool
+		Method          http.Method
+		Path            string
+		RegisterOas3    bool
+		OperationId     string
+		ContentType     string
+		Tags            []string
+		Protected       bool
+		AuthProviders   []string
+		OAuth2Providers map[string][]string
 	}
 )
 
@@ -56,12 +58,13 @@ func NewHandler[Request any, Response any](
 	}
 	fmt.Println(operationId)
 	options := Options{
-		Method:       method,
-		Path:         path,
-		RegisterOas3: true,
-		OperationId:  operationId,
-		ContentType:  "application/json; charset=utf-8",
-		Tags:         []string{},
+		Method:        method,
+		Path:          path,
+		RegisterOas3:  true,
+		OperationId:   operationId,
+		ContentType:   "application/json; charset=utf-8",
+		Tags:          []string{},
+		AuthProviders: []string{},
 	}
 	opt.Apply(&options, opts...)
 	return &Handler{

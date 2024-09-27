@@ -5,13 +5,14 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/errors"
 )
 
 func FromEnv[T any](prefixes ...string) (T, error) {
 	var t T
-	if err := envconfig.Process(strings.Join(prefixes, "_"), &t); err != nil {
-		return t, errors.Wrapf(err, "failed to load config from environment")
+	key := strings.ToUpper(strings.Join(prefixes, "_"))
+	if err := envconfig.Process(key, &t); err != nil {
+		return t, errors.Wrapf(err, "failed to load config from environment variable %s", key)
 	}
 	return t, nil
 }

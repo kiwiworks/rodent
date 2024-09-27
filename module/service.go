@@ -6,7 +6,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/system/opt"
 )
 

@@ -2,34 +2,55 @@ package command
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/kiwiworks/rodent/errors"
+	"github.com/kiwiworks/rodent/system/opt"
 )
 
 type (
 	Command struct {
-		Name  string
-		Short string
-		Long  string
+		Name                   string
+		Short                  string
+		Long                   string
+		Run                    func(cmd *cobra.Command, args []string) error
+		Example                string
+		Annotations            map[string]string
+		Deprecated             string
+		SuggestFor             []string
+		MutuallyExclusiveFlags []string
+		RequiredFlags          []string
+		FlagHandlers           map[string]func(cmd *cobra.Command) error
 	}
 )
 
-func New(name string, short string, long string) *Command {
-	return &Command{
+func New(name string, short string, long string, opts ...opt.Option[Command]) *Command {
+	cmd := &Command{
 		Name:  name,
 		Short: short,
 		Long:  long,
+		Run: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+		Annotations:            map[string]string{},
+		SuggestFor:             []string{},
+		MutuallyExclusiveFlags: []string{},
+		RequiredFlags:          []string{},
+		FlagHandlers:           map[string]func(cmd *cobra.Command) error{},
 	}
+	opt.Apply(cmd, opts...)
+	return cmd
 }
 
 func (c *Command) asCobraCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:        "",
+	cmd := &cobra.Command{
+		Use:        c.Name,
 		Aliases:    nil,
-		SuggestFor: nil,
+		SuggestFor: c.SuggestFor,
 		Short:      c.Short,
 		GroupID:    "",
 		Long:       c.Long,
-		Example:    "",
-		ValidArgs:  []string{},
+		Example:    c.Example,
+		//ValidArgs:  []string{},
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) (
 			[]string,
 			cobra.ShellCompDirective,
@@ -39,17 +60,22 @@ func (c *Command) asCobraCommand() *cobra.Command {
 		Args:                   func(cmd *cobra.Command, args []string) error { return nil },
 		ArgAliases:             []string{},
 		BashCompletionFunction: "",
-		//Deprecated:                 "",
-		Annotations:       nil,
-		Version:           "",
-		PersistentPreRun:  nil,
-		PersistentPreRunE: nil,
-		PreRun:            nil,
-		PreRunE:           nil,
-		Run: func(cmd *cobra.Command, args []string) {
+		Deprecated:             c.Deprecated,
+		Annotations:            c.Annotations,
+		Version:                "",
+		PersistentPreRun:       nil,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.MarkFlagsOneRequired(c.RequiredFlags...)
+			cmd.MarkFlagsMutuallyExclusive(c.MutuallyExclusiveFlags...)
 
+			return nil
 		},
-		RunE:                       nil,
+		PreRun:  nil,
+		PreRunE: nil,
+		Run:     nil,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return c.Run(cmd, args)
+		},
 		PostRun:                    nil,
 		PostRunE:                   nil,
 		PersistentPostRun:          nil,
@@ -66,4 +92,11 @@ func (c *Command) asCobraCommand() *cobra.Command {
 		DisableSuggestions:         false,
 		SuggestionsMinimumDistance: 0,
 	}
+	for name, handler := range c.FlagHandlers {
+		if err := handler(cmd); err != nil {
+			panic(errors.Wrapf(err, "failed to handle flag parsing for '%s'", name))
+		}
+	}
+
+	return cmd
 }

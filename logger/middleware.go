@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
+
+	"github.com/kiwiworks/rodent/logger/props"
 )
 
 func Middleware() func(next http.Handler) http.Handler {
@@ -17,20 +19,19 @@ func Middleware() func(next http.Handler) http.Handler {
 			defer func() {
 				log := FromContext(ctx).
 					With(
-						zap.String("proto", r.Proto),
-						zap.String("method", r.Method),
-						zap.String("path", r.URL.Path),
-						zap.String("id", middleware.GetReqID(ctx)),
+						props.HttpProtocol(r.Proto),
+						props.HttpMethod(r.Method),
+						props.HttpPath(r.URL.Path),
+						props.HttpRequestID(middleware.GetReqID(ctx)),
+						props.HttpContentLength(r.ContentLength),
+						props.HttpResponseSize(responseWriter.BytesWritten()),
+						props.HttpStatusCode(responseWriter.Status()),
 						zap.Duration("elapsedTime", time.Since(now)),
-						zap.Int("status", responseWriter.Status()),
-						zap.Int("size", responseWriter.BytesWritten()),
-					).
-					Sugar()
+					)
 				switch status := responseWriter.Status(); status {
 				case 200, 201, 203, 301, 304:
-					log.Infof("%s %s: %d", r.Method, r.URL.Path, status)
 				default:
-					log.Warnf("%s %s: %d", r.Method, r.URL.Path, status)
+					log.Warn("http request error")
 				}
 			}()
 			next.ServeHTTP(responseWriter, r.WithContext(ctx))

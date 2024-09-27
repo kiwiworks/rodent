@@ -92,10 +92,14 @@ func UniqueBy[T any, V comparable](vs []T, selector func(v T) V) []T {
 	})
 }
 
+// Ident returns the input value without modifications.
+// It is a generic identity function that works for any type.
 func Ident[T any](t T) T {
 	return t
 }
 
+// Unique returns a new slice that contains only the unique elements from the input slice `vs`.
+// It uses the Ident function as the selector to determine uniqueness.
 func Unique[T comparable](vs []T) []T {
 	return UniqueBy[T](vs, Ident[T])
 }

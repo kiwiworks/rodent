@@ -16,12 +16,18 @@ func printLocation() {
 	fmt.Printf("%s:%d\n", file, line)
 }
 
+// Do execute the provided function `fn` and prints the caller's file and line number.
+// This is only available in debug builds.
+//
 //go:inline
 func Do(fn func()) {
 	printLocation()
 	fn()
 }
 
+// DoIf executes the provided function if the condition is true and prints the call location.
+// This is only available in debug builds.
+//
 //go:inline
 func DoIf(cond bool, fn func()) {
 	if cond {
@@ -30,6 +36,9 @@ func DoIf(cond bool, fn func()) {
 	}
 }
 
+// DoWith calls printLocation to output the caller's file and line number, then executes the provided function with the context.
+// This is only available in debug builds.
+//
 //go:inline
 func DoWith(ctx context.Context, fn func(ctx context.Context)) {
 	printLocation()

@@ -8,7 +8,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 
-	"github.com/kiwiworks/rodent/system/errors"
+	"github.com/kiwiworks/rodent/errors"
 )
 
 type UploadedObject struct {

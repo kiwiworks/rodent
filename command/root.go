@@ -7,7 +7,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"github.com/kiwiworks/rodent/system/logger"
+	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 
@@ -26,13 +26,14 @@ type RootParams struct {
 
 func NewRoot(params RootParams) *Root {
 	log := logger.New()
+
 	rootCmd := &cobra.Command{
 		Use:     params.Manifest.Application,
 		Version: params.Manifest.Version.String(),
 	}
 	for _, cmd := range params.Commands {
 		cobraCmd := cmd.asCobraCommand()
-		log.Info("added new command", zap.String("command.short", cobraCmd.Short))
+		log.Debug("added new command", zap.String("command.short", cobraCmd.Short))
 		rootCmd.AddCommand(cobraCmd)
 	}
 	return &Root{

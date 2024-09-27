@@ -4,8 +4,8 @@ import (
 	"net/url"
 
 	"github.com/kiwiworks/rodent/config"
+	"github.com/kiwiworks/rodent/errors"
 	"github.com/kiwiworks/rodent/module"
-	"github.com/kiwiworks/rodent/system/errors"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 

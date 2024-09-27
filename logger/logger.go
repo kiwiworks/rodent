@@ -9,6 +9,8 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/kiwiworks/rodent/logger/props"
 )
 
 func init() {
@@ -17,11 +19,12 @@ func init() {
 }
 
 var (
-	globalLevel = atomic.NewInt32(int32(LDebug))
+	legacy   = atomic.NewInt32(int32(LDebug))
+	logLevel = zap.NewAtomicLevelAt(LDebug)
 )
 
 func SetLevel(level Level) {
-	globalLevel.Store(int32(level))
+	legacy.Store(int32(level))
 }
 
 type (
@@ -52,15 +55,18 @@ func New(opts ...Option) *zap.Logger {
 	switch logMode {
 	case "PROD":
 		cfg := zap.NewProductionConfig()
+		cfg.Level = logLevel
 		logger, err = cfg.Build()
 		cfg.DisableStacktrace = true
 	case "DEV":
 		cfg := zap.NewDevelopmentConfig()
+		cfg.Level = logLevel
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		cfg.DisableStacktrace = true
 		logger, err = cfg.Build()
 	default:
 		cfg := zap.NewDevelopmentConfig()
+		cfg.Level = logLevel
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		cfg.DisableStacktrace = true
 		logger, err = cfg.Build()
@@ -97,8 +103,8 @@ func FromContext(ctx context.Context, opts ...Option) *zap.Logger {
 
 func FromRequest(req *http.Request, opts ...Option) *zap.Logger {
 	opts = append(opts, Fields(
-		zap.String("http.method", req.Method),
-		zap.String("http.url", req.URL.String()),
+		props.HttpMethod(req.Method),
+		props.HttpRequestUrl(req.URL),
 	))
 	return FromContext(req.Context(), opts...)
 }
