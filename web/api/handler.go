@@ -30,6 +30,7 @@ type (
 		Protected       bool
 		AuthProviders   []string
 		OAuth2Providers map[string][]string
+		Description     string
 	}
 )
 
@@ -75,6 +76,7 @@ func NewHandler[Request any, Response any](
 		Options: options,
 		Mount: func(api huma.API, config Config) {
 			op := huma.Operation{
+				Description: options.Description,
 				Method:      options.Method.String(),
 				Path:        options.Path,
 				OperationID: options.OperationId,

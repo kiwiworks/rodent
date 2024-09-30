@@ -19,3 +19,15 @@ func Tags(tags ...string) opt.Option[Options] {
 		opt.Tags = tags
 	}
 }
+
+func Description(description string) opt.Option[Options] {
+	return func(opt *Options) {
+		opt.Description = description
+	}
+}
+
+func OperationID(operationID string) opt.Option[Options] {
+	return func(opt *Options) {
+		opt.OperationId = operationID
+	}
+}
