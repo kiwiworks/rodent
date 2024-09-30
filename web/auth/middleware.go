@@ -40,7 +40,7 @@ func (m *Middleware) Middleware(ctx huma.Context, next func(ctx huma.Context)) {
 	op := ctx.Operation()
 	log := logger.New().With(zap.String("http.method", ctx.Method()), zap.String("http.path", op.Path))
 
-	if op.Security == nil {
+	if op.Security == nil || len(op.Security) == 0 {
 		next(ctx)
 		return
 	}
@@ -59,7 +59,7 @@ func (m *Middleware) Middleware(ctx huma.Context, next func(ctx huma.Context)) {
 				m.writeError(ctx, 401, "could not resolve user from credentials", err)
 				return
 			}
-			next(huma.WithContext(ctx, injectUser(ctx.Context(), user)))
+			next(huma.WithContext(ctx, InjectUser(ctx.Context(), user)))
 			return
 		}
 	}

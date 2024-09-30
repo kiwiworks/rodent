@@ -14,12 +14,6 @@ func Oauth2(providerName string, scopes ...string) opt.Option[Options] {
 	}
 }
 
-func Protected() opt.Option[Options] {
-	return func(opt *Options) {
-		opt.Protected = true
-	}
-}
-
 func Tags(tags ...string) opt.Option[Options] {
 	return func(opt *Options) {
 		opt.Tags = tags

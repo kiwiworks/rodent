@@ -8,8 +8,9 @@ import (
 )
 
 type (
-	Import struct{}
-	Export struct{}
+	IModule interface {
+		IntoFxModule() fx.Option
+	}
 	Module struct {
 		Name       string
 		Public     []any
@@ -17,7 +18,7 @@ type (
 		Instances  []any
 		Decorators []any
 		Invokers   []any
-		SubModules []Module
+		SubModules []IModule
 	}
 )
 
@@ -29,7 +30,7 @@ func New(name string, opts ...opt.Option[Module]) Module {
 		Instances:  []any{},
 		Decorators: []any{},
 		Invokers:   []any{},
-		SubModules: []Module{},
+		SubModules: []IModule{},
 	}
 	opt.Apply(&mod, opts...)
 	return mod
@@ -42,7 +43,7 @@ func (m Module) IntoFxModule() fx.Option {
 	opts = append(opts, fx.Decorate(m.Decorators...))
 	opts = append(opts, fx.Invoke(m.Invokers...))
 	opts = append(opts, fx.Supply(m.Instances...))
-	opts = append(opts, slices.Map(m.SubModules, func(in Module) fx.Option {
+	opts = append(opts, slices.Map(m.SubModules, func(in IModule) fx.Option {
 		return in.IntoFxModule()
 	})...)
 

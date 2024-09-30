@@ -25,7 +25,7 @@ func Supply(suppliers ...any) opt.Option[Module] {
 
 func SubModules(modules ...func() Module) opt.Option[Module] {
 	return func(opt *Module) {
-		opt.SubModules = append(opt.SubModules, slices.Map(modules, func(in func() Module) Module {
+		opt.SubModules = append(opt.SubModules, slices.Map(modules, func(in func() Module) IModule {
 			return in()
 		})...)
 	}
