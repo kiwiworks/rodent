@@ -10,7 +10,7 @@ import (
 	"github.com/kiwiworks/rodent/logger/props"
 )
 
-func Middleware() func(next http.Handler) http.Handler {
+func ChiMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -26,6 +26,7 @@ func Middleware() func(next http.Handler) http.Handler {
 						props.HttpContentLength(r.ContentLength),
 						props.HttpResponseSize(responseWriter.BytesWritten()),
 						props.HttpStatusCode(responseWriter.Status()),
+						props.HttpUserAgent(r.UserAgent()),
 						zap.Duration("elapsedTime", time.Since(now)),
 					)
 				switch status := responseWriter.Status(); status {
