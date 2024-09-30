@@ -7,7 +7,10 @@ import (
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
+	"go.uber.org/zap"
 
+	"github.com/kiwiworks/rodent/logger"
+	"github.com/kiwiworks/rodent/logger/props"
 	"github.com/kiwiworks/rodent/system/opt"
 	"github.com/kiwiworks/rodent/web/http"
 )
@@ -58,13 +61,14 @@ func NewHandler[Request any, Response any](
 	}
 	fmt.Println(operationId)
 	options := Options{
-		Method:        method,
-		Path:          path,
-		RegisterOas3:  true,
-		OperationId:   operationId,
-		ContentType:   "application/json; charset=utf-8",
-		Tags:          []string{},
-		AuthProviders: []string{},
+		Method:          method,
+		Path:            path,
+		RegisterOas3:    true,
+		OperationId:     operationId,
+		ContentType:     "application/json; charset=utf-8",
+		Tags:            []string{},
+		AuthProviders:   []string{},
+		OAuth2Providers: map[string][]string{},
 	}
 	opt.Apply(&options, opts...)
 	return &Handler{
@@ -77,13 +81,18 @@ func NewHandler[Request any, Response any](
 				Tags:        options.Tags,
 				Security:    []map[string][]string{},
 			}
-			if options.Protected {
-				op.Security = append(op.Security, map[string][]string{
-					"protected": {"read", "write"},
-				})
+			for _, authProvider := range options.AuthProviders {
+				op.Security = append(op.Security, map[string][]string{authProvider: {}})
+			}
+			for oauth2provider, scopes := range options.OAuth2Providers {
+				op.Security = append(op.Security, map[string][]string{oauth2provider: scopes})
 			}
 			huma.Register(api, op, func(ctx context.Context, i *Request) (*Response, error) {
+				log := logger.FromContext(ctx).With(props.Oas3OperationId(options.OperationId))
 				response, err := impl(ctx, i)
+				if err != nil {
+					log.Error("handler error", zap.Error(err))
+				}
 				return response, config.ErrorConverter(err)
 			})
 		},
