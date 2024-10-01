@@ -14,13 +14,15 @@ type HumaParams struct {
 	fx.In
 	Manifest      *manifest.Manifest
 	Mux           *chi.Mux
-	AuthProviders *auth.Providers
+	AuthProviders *auth.Providers `optional:"true"`
 }
 
 func NewHuma(params HumaParams) huma.API {
 	api := humachi.New(params.Mux, huma.DefaultConfig(params.Manifest.Application, params.Manifest.Version.String()))
 	doc := api.OpenAPI()
 	doc.Components.SecuritySchemes = make(map[string]*huma.SecurityScheme)
-	params.AuthProviders.HydrateOas3(doc)
+	if params.AuthProviders != nil {
+		params.AuthProviders.HydrateOas3(doc)
+	}
 	return api
 }

@@ -1,4 +1,4 @@
-package functional
+package lang
 
 func Default[T comparable](value T, defaultValue T) T {
 	var zero T

@@ -1,4 +1,4 @@
-package functional
+package lang
 
 import (
 	"testing"
