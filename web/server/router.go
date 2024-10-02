@@ -19,7 +19,7 @@ type RouterConfig struct {
 	fx.In
 	Mux            *chi.Mux
 	Api            huma.API
-	AuthMiddleware *auth.Middleware `optional:"true"`
+	AuthMiddleware *auth.Middleware
 }
 
 func NewRouter(cfg RouterConfig) *Router {
