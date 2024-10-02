@@ -2,12 +2,14 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 
 	"github.com/kiwiworks/rodent/logger"
+	"github.com/kiwiworks/rodent/logger/props"
 	"github.com/kiwiworks/rodent/module"
 	"github.com/kiwiworks/rodent/system/manifest"
 	"github.com/kiwiworks/rodent/system/opt"
@@ -27,6 +29,18 @@ func Modules(modules ...func() module.Module) opt.Option[App] {
 	}
 }
 
+func StartTimeout(timeout time.Duration) opt.Option[App] {
+	return func(opt *App) {
+		opt.fxOptions = append(opt.fxOptions, fx.StartTimeout(timeout))
+	}
+}
+
+func StopTimeout(timeout time.Duration) opt.Option[App] {
+	return func(opt *App) {
+		opt.fxOptions = append(opt.fxOptions, fx.StopTimeout(timeout))
+	}
+}
+
 func fxLogProvider() fxevent.Logger {
 	log := &fxevent.ZapLogger{
 		Logger: logger.New(),
@@ -36,6 +50,7 @@ func fxLogProvider() fxevent.Logger {
 }
 
 func New(name, version string, opts ...opt.Option[App]) *App {
+	log := logger.New()
 	m := manifest.New(name, version)
 	app := &App{
 		manifest: m,
@@ -46,6 +61,12 @@ func New(name, version string, opts ...opt.Option[App]) *App {
 	}
 	opt.Apply(app, opts...)
 	app.di = fx.New(app.fxOptions...)
+	log.Info("application created",
+		props.AppName(name),
+		props.AppVersion(version),
+		props.AppStartTimeout(app.di.StartTimeout()),
+		props.AppStopTimeout(app.di.StopTimeout()),
+	)
 	return app
 }
 
