@@ -16,6 +16,7 @@ type (
 	Addr   string
 	Server struct {
 		server http.Server
+		router *Router
 	}
 	Params struct {
 		fx.In
@@ -42,6 +43,7 @@ func New(params Params) *Server {
 			Addr:    string(addr),
 			Handler: params.Router.mux,
 		},
+		router: params.Router,
 	}
 
 	return server
@@ -49,6 +51,7 @@ func New(params Params) *Server {
 
 func (s *Server) OnStart(ctx context.Context) error {
 	log := logger.FromContext(ctx)
+	s.sanityCheck(ctx)
 	go func() {
 		log.Info("starting server", zap.String("address", s.server.Addr))
 		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
