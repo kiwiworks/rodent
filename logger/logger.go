@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/sanity-io/litter"
 	"go.uber.org/atomic"
@@ -48,7 +50,7 @@ func init() {
 func New(opts ...Option) *zap.Logger {
 	options := newLoggerOptions()
 	options.apply(opts...)
-	logMode := "DEV"
+	logMode := strings.ToUpper(os.Getenv("LOG_MODE"))
 	var logger *zap.Logger
 	var err error
 
