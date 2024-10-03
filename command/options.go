@@ -15,17 +15,21 @@ func Runner(impl func(cmd *cobra.Command, args []string) error) opt.Option[Comma
 }
 
 type Flag struct {
-	Name      string
-	Shorthand string
-	Usage     string
-	Required  bool
-	Exclusive bool
+	Name        string
+	Shorthand   string
+	Usage       string
+	OneRequired bool
+	Required    bool
+	Exclusive   bool
 }
 
 func StringFlag(flag Flag, ptr *string) opt.Option[Command] {
 	return func(opt *Command) {
 		if flag.Exclusive {
 			opt.MutuallyExclusiveFlags = append(opt.MutuallyExclusiveFlags, flag.Name)
+		}
+		if flag.OneRequired {
+			opt.RequiredOneFlags = append(opt.RequiredOneFlags, flag.Name)
 		}
 		if flag.Required {
 			opt.RequiredFlags = append(opt.RequiredFlags, flag.Name)
@@ -34,7 +38,7 @@ func StringFlag(flag Flag, ptr *string) opt.Option[Command] {
 			if ptr == nil {
 				return errors.Newf("command.StringFlag expects a pointer to a string, but got nil")
 			}
-			cmd.PersistentFlags().StringVarP(ptr, flag.Name, flag.Shorthand, *ptr, flag.Usage)
+			cmd.Flags().StringVarP(ptr, flag.Name, flag.Shorthand, *ptr, flag.Usage)
 			return nil
 		}
 	}

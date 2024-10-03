@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-	litter.Config.HideZeroValues = false
-	litter.Config.HidePrivateFields = false
+	litter.Config.HideZeroValues = true
+	litter.Config.HidePrivateFields = true
 }
 
 var (

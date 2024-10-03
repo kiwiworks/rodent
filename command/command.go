@@ -18,6 +18,7 @@ type (
 		Deprecated             string
 		SuggestFor             []string
 		MutuallyExclusiveFlags []string
+		RequiredOneFlags       []string
 		RequiredFlags          []string
 		FlagHandlers           map[string]func(cmd *cobra.Command) error
 	}
@@ -34,6 +35,7 @@ func New(name string, short string, long string, opts ...opt.Option[Command]) *C
 		Annotations:            map[string]string{},
 		SuggestFor:             []string{},
 		MutuallyExclusiveFlags: []string{},
+		RequiredOneFlags:       []string{},
 		RequiredFlags:          []string{},
 		FlagHandlers:           map[string]func(cmd *cobra.Command) error{},
 	}
@@ -65,8 +67,13 @@ func (c *Command) asCobraCommand() *cobra.Command {
 		Version:                "",
 		PersistentPreRun:       nil,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			cmd.MarkFlagsOneRequired(c.RequiredFlags...)
+			cmd.MarkFlagsOneRequired(c.RequiredOneFlags...)
 			cmd.MarkFlagsMutuallyExclusive(c.MutuallyExclusiveFlags...)
+			for _, flag := range c.RequiredFlags {
+				if err := cmd.MarkFlagRequired(flag); err != nil {
+					return errors.Wrapf(err, "failed to mark flag '%s' as required", flag)
+				}
+			}
 
 			return nil
 		},
