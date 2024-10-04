@@ -23,7 +23,7 @@ type Flag struct {
 	Exclusive   bool
 }
 
-func StringFlag(flag Flag, ptr *string) opt.Option[Command] {
+func flagOpt(flag Flag, handler func(cmd *cobra.Command) error) opt.Option[Command] {
 	return func(opt *Command) {
 		if flag.Exclusive {
 			opt.MutuallyExclusiveFlags = append(opt.MutuallyExclusiveFlags, flag.Name)
@@ -34,14 +34,38 @@ func StringFlag(flag Flag, ptr *string) opt.Option[Command] {
 		if flag.Required {
 			opt.RequiredFlags = append(opt.RequiredFlags, flag.Name)
 		}
-		opt.FlagHandlers[flag.Name] = func(cmd *cobra.Command) error {
-			if ptr == nil {
-				return errors.Newf("command.StringFlag expects a pointer to a string, but got nil")
-			}
-			cmd.Flags().StringVarP(ptr, flag.Name, flag.Shorthand, *ptr, flag.Usage)
-			return nil
-		}
+		opt.FlagHandlers[flag.Name] = handler
 	}
+}
+
+func StringFlag(flag Flag, ptr *string) opt.Option[Command] {
+	return flagOpt(flag, func(cmd *cobra.Command) error {
+		if ptr == nil {
+			return errors.Newf("command.StringFlag expects a pointer to a string, but got nil")
+		}
+		cmd.Flags().StringVarP(ptr, flag.Name, flag.Shorthand, *ptr, flag.Usage)
+		return nil
+	})
+}
+
+func BoolFlag(flag Flag, ptr *bool) opt.Option[Command] {
+	return flagOpt(flag, func(cmd *cobra.Command) error {
+		if ptr == nil {
+			return errors.Newf("command.BoolFlag expects a pointer to a bool, but got nil")
+		}
+		cmd.Flags().BoolVarP(ptr, flag.Name, flag.Shorthand, *ptr, flag.Usage)
+		return nil
+	})
+}
+
+func IntFlag(flag Flag, ptr *int) opt.Option[Command] {
+	return flagOpt(flag, func(cmd *cobra.Command) error {
+		if ptr == nil {
+			return errors.Newf("command.IntFlag expects a pointer to an int, but got nil")
+		}
+		cmd.Flags().IntVarP(ptr, flag.Name, flag.Shorthand, *ptr, flag.Usage)
+		return nil
+	})
 }
 
 func Example(example string) opt.Option[Command] {
