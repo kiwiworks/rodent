@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-querystring/query"
 
 	"github.com/kiwiworks/rodent/errors"
+	"github.com/kiwiworks/rodent/maps"
 	"github.com/kiwiworks/rodent/system/opt"
 	"github.com/kiwiworks/rodent/web/header"
 )
@@ -133,5 +134,16 @@ func WithQueryStrings(name string, values ...string) opt.Option[Request] {
 		for _, value := range values {
 			WithQueryParam(name, value)(request)
 		}
+	}
+}
+
+func WithQueryStruct[T any](value T) opt.Option[Request] {
+	return func(request *Request) {
+		values, err := query.Values(value)
+		if err != nil {
+			request.errors = append(request.errors, errors.Wrapf(err, "Query serialization of body '%T' failed", value))
+			return
+		}
+		request.values = maps.Merged(request.values, values)
 	}
 }

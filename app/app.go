@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
@@ -19,6 +20,7 @@ type App struct {
 	manifest  *manifest.Manifest
 	fxOptions []fx.Option
 	di        *fx.App
+	Done      chan struct{}
 }
 
 func Modules(modules ...func() module.Module) opt.Option[App] {
@@ -58,6 +60,7 @@ func New(name, version string, opts ...opt.Option[App]) *App {
 			fx.Supply(m),
 			fx.WithLogger(fxLogProvider),
 		},
+		Done: make(chan struct{}),
 	}
 	opt.Apply(app, opts...)
 	app.di = fx.New(app.fxOptions...)
@@ -70,6 +73,28 @@ func New(name, version string, opts ...opt.Option[App]) *App {
 	return app
 }
 
+func (app *App) StartBackground(ctx context.Context) error {
+	log := logger.FromContext(ctx)
+	if err := app.di.Start(ctx); err != nil {
+		return errors.Wrap(err, "failed to start application")
+	}
+	go func() {
+		select {
+		case <-ctx.Done():
+			stopCtx, cancel := context.WithTimeout(context.Background(), app.di.StopTimeout())
+			defer cancel()
+			if err := app.di.Stop(stopCtx); err != nil {
+				panic(errors.Wrap(err, "failed to stop application"))
+			}
+			app.Done <- struct{}{}
+		case signal := <-app.di.Wait():
+			log.Info("application stopped", zap.Int("exitCode", signal.ExitCode), zap.Stringer("signal", signal.Signal))
+			app.Done <- struct{}{}
+		}
+	}()
+	return nil
+}
+
 func (app *App) Run() {
 	ctx := context.Background()
 	log := logger.New()
@@ -78,5 +103,6 @@ func (app *App) Run() {
 		panic(err)
 	}
 	signal := <-app.di.Wait()
+	app.Done <- struct{}{}
 	log.Info("application stopped", zap.Int("exitCode", signal.ExitCode), zap.Stringer("signal", signal.Signal))
 }
