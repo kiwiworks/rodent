@@ -47,7 +47,7 @@ func fxLogProvider() fxevent.Logger {
 	log := &fxevent.ZapLogger{
 		Logger: logger.New(),
 	}
-	log.UseLogLevel(log.Logger.Level())
+	log.UseLogLevel(logger.DebugLevel)
 	return log
 }
 
@@ -103,6 +103,8 @@ func (app *App) Run() {
 		panic(err)
 	}
 	signal := <-app.di.Wait()
-	app.Done <- struct{}{}
+	go func() {
+		app.Done <- struct{}{}
+	}()
 	log.Info("application stopped", zap.Int("exitCode", signal.ExitCode), zap.Stringer("signal", signal.Signal))
 }

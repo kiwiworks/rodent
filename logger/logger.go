@@ -6,27 +6,22 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
-	"github.com/sanity-io/litter"
-	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/kiwiworks/rodent/logger/props"
 )
 
-func init() {
-	litter.Config.HideZeroValues = true
-	litter.Config.HidePrivateFields = true
-}
-
 var (
-	legacy   = atomic.NewInt32(int32(LDebug))
-	logLevel = zap.NewAtomicLevelAt(LDebug)
+	once     sync.Once
+	logMode  string
+	logLevel zap.AtomicLevel
 )
 
 func SetLevel(level Level) {
-	legacy.Store(int32(level))
+	logLevel.SetLevel(level)
 }
 
 type (
@@ -34,44 +29,51 @@ type (
 )
 
 const (
-	LDebug   = zapcore.DebugLevel
-	LInfo    = zapcore.InfoLevel
-	LWarning = zapcore.WarnLevel
-	LError   = zapcore.ErrorLevel
-	LFatal   = zapcore.FatalLevel
+	DebugLevel   = zapcore.DebugLevel
+	InfoLevel    = zapcore.InfoLevel
+	WarningLevel = zapcore.WarnLevel
+	ErrorLevel   = zapcore.ErrorLevel
+	FatalLevel   = zapcore.FatalLevel
 )
 
 // do not migrate this to application OnStart hooks
 // as we need a correctly configured logger ASAP
 func init() {
+	once.Do(func() {
+		logMode = strings.ToUpper(os.Getenv("LOG_MODE"))
+		if logMode == "" {
+			logMode = "DEV"
+		}
+		logLevel = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+		if level := os.Getenv("LOG_LEVEL"); level != "" {
+			if err := logLevel.UnmarshalText([]byte(level)); err != nil {
+				panic(fmt.Sprintf("invalid log level: %s", level))
+			}
+		}
+	})
 	zap.ReplaceGlobals(New())
 }
 
 func New(opts ...Option) *zap.Logger {
 	options := newLoggerOptions()
 	options.apply(opts...)
-	logMode := strings.ToUpper(os.Getenv("LOG_MODE"))
 	var logger *zap.Logger
 	var err error
 
 	switch logMode {
-	case "PROD":
+	case "PROD", "PRODUCTION":
 		cfg := zap.NewProductionConfig()
 		cfg.Level = logLevel
 		logger, err = cfg.Build()
 		cfg.DisableStacktrace = true
-	case "DEV":
+	case "DEV", "DEVELOPMENT":
 		cfg := zap.NewDevelopmentConfig()
 		cfg.Level = logLevel
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		cfg.DisableStacktrace = true
 		logger, err = cfg.Build()
 	default:
-		cfg := zap.NewDevelopmentConfig()
-		cfg.Level = logLevel
-		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		cfg.DisableStacktrace = true
-		logger, err = cfg.Build()
+		panic(fmt.Sprintf("invalid log mode: %s, expected one of [DEV, DEVELOPMENT, PROD, PRODUCTION]", logMode))
 	}
 	if err != nil {
 		// we want to panic if no *zap.Logger instance can be acquired
