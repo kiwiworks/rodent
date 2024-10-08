@@ -13,7 +13,6 @@ import (
 )
 
 type (
-	Addr   string
 	Server struct {
 		server http.Server
 		router *Router
