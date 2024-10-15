@@ -11,7 +11,6 @@ import (
 
 	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/logger/props"
-	"github.com/kiwiworks/rodent/module"
 	"github.com/kiwiworks/rodent/system/manifest"
 	"github.com/kiwiworks/rodent/system/opt"
 )
@@ -23,7 +22,7 @@ type App struct {
 	Done      chan struct{}
 }
 
-func Modules(modules ...func() module.Module) opt.Option[App] {
+func Modules(modules ...func() Module) opt.Option[App] {
 	return func(opt *App) {
 		for _, m := range modules {
 			opt.fxOptions = append(opt.fxOptions, m().IntoFxModule())

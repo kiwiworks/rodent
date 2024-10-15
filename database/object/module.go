@@ -3,9 +3,10 @@ package object
 import (
 	"github.com/pkg/errors"
 
+	"github.com/kiwiworks/rodent/app"
+	"github.com/kiwiworks/rodent/app/module"
 	"github.com/kiwiworks/rodent/config"
 	"github.com/kiwiworks/rodent/logger"
-	"github.com/kiwiworks/rodent/module"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 
@@ -33,9 +34,8 @@ func configProvider(manifest *manifest.Manifest) (*StoreConfig, error) {
 	}, nil
 }
 
-func Module() module.Module {
-	return module.New(
-		"database.object",
+func Module() app.Module {
+	return app.NewModule(
 		module.Private(configProvider),
 		module.Public(NewStore),
 	)

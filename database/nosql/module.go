@@ -3,9 +3,10 @@ package nosql
 import (
 	"net/url"
 
+	"github.com/kiwiworks/rodent/app"
+	"github.com/kiwiworks/rodent/app/module"
 	"github.com/kiwiworks/rodent/config"
 	"github.com/kiwiworks/rodent/errors"
-	"github.com/kiwiworks/rodent/module"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 
@@ -20,9 +21,8 @@ func configProvider(manifest *manifest.Manifest) (*SurrealDBConfig, error) {
 	return ConfigFromUrl(env.Dsn)
 }
 
-func Module() module.Module {
-	return module.New(
-		"database.nosql",
+func Module() app.Module {
+	return app.NewModule(
 		module.Private(configProvider),
 		module.Public(NewClient),
 		module.Service[Client](),

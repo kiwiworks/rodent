@@ -1,4 +1,4 @@
-package module
+package app
 
 import (
 	"go.uber.org/fx"
@@ -22,7 +22,7 @@ type (
 	}
 )
 
-func New(name string, opts ...opt.Option[Module]) Module {
+func NewNamedModule(name string, opts ...opt.Option[Module]) Module {
 	mod := Module{
 		Name:       name,
 		Public:     []any{},

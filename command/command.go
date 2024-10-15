@@ -1,6 +1,8 @@
 package command
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/kiwiworks/rodent/errors"
@@ -21,10 +23,17 @@ type (
 		RequiredOneFlags       []string
 		RequiredFlags          []string
 		FlagHandlers           map[string]func(cmd *cobra.Command) error
+		ChildOf                []string
 	}
 )
 
+// New creates a new Command instance with the specified name, short description, long description, and optional configurations.
 func New(name string, short string, long string, opts ...opt.Option[Command]) *Command {
+	var childOf []string
+	if segments := strings.Split(name, "."); len(segments) > 1 {
+		childOf = segments[:len(segments)-1]
+		name = segments[len(segments)-1]
+	}
 	cmd := &Command{
 		Name:  name,
 		Short: short,
@@ -38,6 +47,7 @@ func New(name string, short string, long string, opts ...opt.Option[Command]) *C
 		RequiredOneFlags:       []string{},
 		RequiredFlags:          []string{},
 		FlagHandlers:           map[string]func(cmd *cobra.Command) error{},
+		ChildOf:                childOf,
 	}
 	opt.Apply(cmd, opts...)
 	return cmd

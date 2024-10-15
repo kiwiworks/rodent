@@ -1,10 +1,12 @@
 package command
 
-import "github.com/kiwiworks/rodent/module"
+import (
+	"github.com/kiwiworks/rodent/app"
+	"github.com/kiwiworks/rodent/app/module"
+)
 
-func Module() module.Module {
-	return module.New(
-		"core.command",
+func Module() app.Module {
+	return app.NewModule(
 		module.Public(NewRoot),
 		module.Service[Root](),
 	)

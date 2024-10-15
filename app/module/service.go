@@ -6,6 +6,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
+	"github.com/kiwiworks/rodent/app"
 	"github.com/kiwiworks/rodent/logger"
 	"github.com/kiwiworks/rodent/system/opt"
 )
@@ -34,12 +35,12 @@ func invoke[T any](*T) {
 	log.Info("service available", zap.String("service", fmt.Sprintf("%T", (*T)(nil))))
 }
 
-func Service[T any]() opt.Option[Module] {
+func Service[T any]() opt.Option[app.Module] {
 	concrete := new(T)
 	asAny := any(concrete)
 	switch asAny.(type) {
 	case OnStartStop:
-		return func(opt *Module) {
+		return func(opt *app.Module) {
 			opt.Decorators = append(opt.Decorators, func(impl *T, lifecycle fx.Lifecycle) *T {
 				asAny := any(impl)
 				asService := asAny.(OnStartStop)
@@ -49,7 +50,7 @@ func Service[T any]() opt.Option[Module] {
 			opt.Invokers = append(opt.Invokers, invoke[T])
 		}
 	case OnStart:
-		return func(opt *Module) {
+		return func(opt *app.Module) {
 			opt.Decorators = append(opt.Decorators, func(impl *T, lifecycle fx.Lifecycle) *T {
 				asAny := any(impl)
 				asService := asAny.(OnStart)
@@ -59,7 +60,7 @@ func Service[T any]() opt.Option[Module] {
 			opt.Invokers = append(opt.Invokers, invoke[T])
 		}
 	case OnStop:
-		return func(opt *Module) {
+		return func(opt *app.Module) {
 			opt.Decorators = append(opt.Decorators, func(impl *T, lifecycle fx.Lifecycle) *T {
 				asAny := any(impl)
 				asService := asAny.(OnStop)

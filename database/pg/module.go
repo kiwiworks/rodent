@@ -5,9 +5,10 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"github.com/kiwiworks/rodent/app"
+	"github.com/kiwiworks/rodent/app/module"
 	"github.com/kiwiworks/rodent/config"
 	"github.com/kiwiworks/rodent/errors"
-	"github.com/kiwiworks/rodent/module"
 	"github.com/kiwiworks/rodent/system/manifest"
 )
 
@@ -40,9 +41,8 @@ func postgresqlProvider(source *Datasource) (*Database, error) {
 	return NewDatabase(db), nil
 }
 
-func Module() module.Module {
-	return module.New(
-		"database.pg",
+func Module() app.Module {
+	return app.NewModule(
 		module.Private(datasourceProvider),
 		module.Public(postgresqlProvider),
 	)
