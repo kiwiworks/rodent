@@ -24,7 +24,7 @@ type RootParams struct {
 	Commands []*Command `group:"command"`
 }
 
-func NewRoot(params RootParams) *Root {
+func NewRoot(params RootParams) (*Root, error) {
 	log := logger.New()
 
 	rootCmd := &cobra.Command{
@@ -39,7 +39,7 @@ func NewRoot(params RootParams) *Root {
 	return &Root{
 		root:       rootCmd,
 		shutdowner: params.Shutdown,
-	}
+	}, nil
 }
 
 func (r *Root) OnStart(ctx context.Context) error {
