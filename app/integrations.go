@@ -14,7 +14,7 @@ func moduleNameFromCallSite() string {
 	}
 	packageName, err := golang.FindModulePath(file)
 	if err != nil {
-		panic(err)
+		packageName = file
 	}
 	return packageName
 }
