@@ -6,6 +6,12 @@ import (
 	"github.com/kiwiworks/rodent/system/opt"
 )
 
+func Decorate(decorators ...any) opt.Option[app.Module] {
+	return func(opt *app.Module) {
+		opt.Decorators = append(opt.Decorators, decorators...)
+	}
+}
+
 func Public(providers ...any) opt.Option[app.Module] {
 	return func(opt *app.Module) {
 		opt.Public = append(opt.Public, providers...)
