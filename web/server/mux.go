@@ -1,14 +1,20 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
 
 	"github.com/kiwiworks/rodent/logger"
 )
 
-//todo replace by cors config
+//todo(mrkiwi): replace by cors config
 
 type UseCors bool
 
@@ -21,6 +27,25 @@ func NewMux(params MuxParams) *chi.Mux {
 	log := logger.New()
 
 	mux := chi.NewRouter()
+	mux.Use(middleware.RequestID)
+	mux.Use(middleware.RealIP)
+	mux.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := chi.NewRouteContext()
+			routePattern := ""
+			if mux.Match(ctx, r.Method, r.URL.Path) {
+				routePattern = ctx.RoutePattern()
+			}
+			instrumentedHandler := otelhttp.NewHandler(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				span := trace.SpanFromContext(request.Context())
+				span.SetAttributes(
+					semconv.HTTPRoute(routePattern),
+				)
+				next.ServeHTTP(writer, request)
+			}), routePattern)
+			instrumentedHandler.ServeHTTP(w, r)
+		})
+	})
 	if params.UseCors {
 		log.Info("Using CORS")
 		mux.Use(cors.Handler(cors.Options{
@@ -33,5 +58,6 @@ func NewMux(params MuxParams) *chi.Mux {
 		}))
 	}
 	mux.Use(logger.ChiMiddleware())
+
 	return mux
 }

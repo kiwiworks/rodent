@@ -13,6 +13,7 @@ import (
 	"github.com/kiwiworks/rodent/logger/props"
 	"github.com/kiwiworks/rodent/system/manifest"
 	"github.com/kiwiworks/rodent/system/opt"
+	"github.com/kiwiworks/rodent/telemetry"
 )
 
 type App struct {
@@ -20,6 +21,7 @@ type App struct {
 	fxOptions []fx.Option
 	di        *fx.App
 	Done      chan struct{}
+	telemetry *telemetry.Telemetry
 }
 
 func Modules(modules ...func() Module) opt.Option[App] {
@@ -32,12 +34,14 @@ func Modules(modules ...func() Module) opt.Option[App] {
 
 func StartTimeout(timeout time.Duration) opt.Option[App] {
 	return func(opt *App) {
+		opt.manifest.Timeouts.Start = timeout
 		opt.fxOptions = append(opt.fxOptions, fx.StartTimeout(timeout))
 	}
 }
 
 func StopTimeout(timeout time.Duration) opt.Option[App] {
 	return func(opt *App) {
+		opt.manifest.Timeouts.Stop = timeout
 		opt.fxOptions = append(opt.fxOptions, fx.StopTimeout(timeout))
 	}
 }
@@ -53,13 +57,19 @@ func fxLogProvider() fxevent.Logger {
 func New(name, version string, opts ...opt.Option[App]) *App {
 	log := logger.New()
 	m := manifest.New(name, version)
+	telemetryInstance, err := telemetry.New(m)
+	if err != nil {
+		panic(errors.Wrapf(err, "unable to create telemetry instance for %s", name))
+	}
+
 	app := &App{
 		manifest: m,
 		fxOptions: []fx.Option{
 			fx.Supply(m),
 			fx.WithLogger(fxLogProvider),
 		},
-		Done: make(chan struct{}),
+		telemetry: telemetryInstance,
+		Done:      make(chan struct{}),
 	}
 	opt.Apply(app, opts...)
 	app.di = fx.New(app.fxOptions...)
@@ -74,8 +84,14 @@ func New(name, version string, opts ...opt.Option[App]) *App {
 
 func (app *App) StartBackground(ctx context.Context) error {
 	log := logger.FromContext(ctx)
-	if err := app.di.Start(ctx); err != nil {
-		return errors.Wrap(err, "failed to start application")
+	rootTracer := app.telemetry.Tracer(app.manifest.Application)
+	rootCtx, rootSpan := rootTracer.Start(ctx, "app.StartBackground")
+	defer rootSpan.End()
+
+	if err := app.di.Start(rootCtx); err != nil {
+		err = errors.Wrap(err, "failed to start application")
+		rootSpan.RecordError(err)
+		return err
 	}
 	go func() {
 		select {
@@ -83,6 +99,7 @@ func (app *App) StartBackground(ctx context.Context) error {
 			stopCtx, cancel := context.WithTimeout(context.Background(), app.di.StopTimeout())
 			defer cancel()
 			if err := app.di.Stop(stopCtx); err != nil {
+				rootSpan.RecordError(err)
 				panic(errors.Wrap(err, "failed to stop application"))
 			}
 			app.Done <- struct{}{}
@@ -98,7 +115,12 @@ func (app *App) Run() {
 	ctx := context.Background()
 	log := logger.New()
 	log.Info("starting application")
-	if err := app.di.Start(ctx); err != nil {
+	rootTracer := app.telemetry.Tracer(app.manifest.Application)
+	rootCtx, rootSpan := rootTracer.Start(ctx, "app.StartBackground")
+	defer rootSpan.End()
+
+	if err := app.di.Start(rootCtx); err != nil {
+		rootSpan.RecordError(err)
 		panic(err)
 	}
 	signal := <-app.di.Wait()
