@@ -82,14 +82,17 @@ func FilterMap[From any, To any](vs []From, f func(From) (To, bool)) []To {
 //	uniqueItems := UniqueBy(items, func(i Item) int { return i.ID })
 //	// uniqueItems will contain [{ID: 1}, {ID: 2}]
 func UniqueBy[T any, V comparable](vs []T, selector func(v T) V) []T {
-	return Filter(vs, func(v T) bool {
-		for _, x := range vs {
-			if selector(v) == selector(x) {
-				return false
-			}
+	seen := make(map[V]struct{})
+	result := make([]T, 0, len(vs))
+
+	for _, v := range vs {
+		key := selector(v)
+		if _, exists := seen[key]; !exists {
+			seen[key] = struct{}{}
+			result = append(result, v)
 		}
-		return true
-	})
+	}
+	return result
 }
 
 // Ident returns the input value without modifications.
