@@ -31,8 +31,9 @@ func ChiMiddleware() func(next http.Handler) http.Handler {
 					)
 				switch status := responseWriter.Status(); status {
 				case 200, 201, 203, 301, 304:
+					log.Info("ok")
 				default:
-					log.Warn("http request error")
+					log.Warn("error")
 				}
 			}()
 			next.ServeHTTP(responseWriter, r.WithContext(ctx))

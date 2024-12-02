@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -101,6 +102,10 @@ func ctxDecorator(ctx context.Context) []Option {
 }
 
 func FromContext(ctx context.Context, opts ...Option) *zap.Logger {
+	requestId := middleware.GetReqID(ctx)
+	opts = append(opts, Fields(
+		props.HttpRequestID(requestId),
+	))
 	opts = append(opts, ctxDecorator(ctx)...)
 	return New(opts...)
 }
