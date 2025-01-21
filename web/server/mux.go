@@ -16,11 +16,26 @@ import (
 
 //todo(mrkiwi): replace by cors config
 
+// UseCors define if the server should use CORS
+// Deprecated: use CorsConfig instead
 type UseCors bool
+type CorsConfig struct {
+	AllowedOrigins   []string
+	AllowedMethods   []string
+	AllowedHeaders   []string
+	ExposedHeaders   []string
+	AllowCredentials bool
+	MaxAge           int
+}
+
+func WithCors(config CorsConfig) *CorsConfig {
+	return &config
+}
 
 type MuxParams struct {
 	fx.In
-	UseCors UseCors `optional:"true"`
+	UseCors UseCors     `optional:"true"`
+	Cors    *CorsConfig `optional:"true"`
 }
 
 func NewMux(params MuxParams) *chi.Mux {
@@ -46,17 +61,29 @@ func NewMux(params MuxParams) *chi.Mux {
 			instrumentedHandler.ServeHTTP(w, r)
 		})
 	})
-	if params.UseCors {
-		log.Info("Using CORS")
+	if params.UseCors && params.Cors == nil {
+		log.Info("Using CORS with default configuration (deprecated)")
 		mux.Use(cors.Handler(cors.Options{
 			AllowedOrigins:   []string{"*"},
 			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Refresh-Token"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Refresh-Token", "X-Request-Id"},
 			ExposedHeaders:   []string{"Link"},
 			AllowCredentials: false,
 			MaxAge:           300,
 		}))
 	}
+	if params.Cors != nil {
+		log.Info("Using CORS")
+		mux.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   params.Cors.AllowedOrigins,
+			AllowedMethods:   params.Cors.AllowedMethods,
+			AllowedHeaders:   params.Cors.AllowedHeaders,
+			ExposedHeaders:   params.Cors.ExposedHeaders,
+			AllowCredentials: params.Cors.AllowCredentials,
+			MaxAge:           params.Cors.MaxAge,
+		}))
+	}
+
 	mux.Use(logger.ChiMiddleware())
 
 	return mux

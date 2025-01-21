@@ -64,8 +64,10 @@ func New(manifest *manifest.Manifest) (*Telemetry, error) {
 	otel.SetMeterProvider(meterProvider)
 	t.meterProvider = meterProvider
 
-	if err = runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {
-		return nil, errors.Wrapf(err, "failed to start runtime")
+	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") != "" {
+		if err = runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {
+			return nil, errors.Wrapf(err, "failed to start runtime")
+		}
 	}
 	return t, nil
 }
@@ -145,15 +147,17 @@ func newMeterProvider(httpMetricExporter *otlpmetrichttp.Exporter) (*metric.Mete
 
 func (t *Telemetry) OnStop(ctx context.Context) error {
 	var err error
-	if err = t.traceProvider.Shutdown(ctx); err != nil {
-		err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown tracer provider"))
+	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") != "" {
+		if err = t.traceProvider.Shutdown(ctx); err != nil {
+			err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown tracer provider"))
+		}
+		if err = t.traceExporter.Shutdown(ctx); err != nil {
+			err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown trace exporter"))
+		}
+		if err = t.meterProvider.Shutdown(ctx); err != nil {
+			err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown meter provider"))
+		}
+		t.cancel()
 	}
-	if err = t.traceExporter.Shutdown(ctx); err != nil {
-		err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown trace exporter"))
-	}
-	if err = t.meterProvider.Shutdown(ctx); err != nil {
-		err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown meter provider"))
-	}
-	t.cancel()
 	return err
 }
