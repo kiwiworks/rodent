@@ -2,7 +2,16 @@ package module
 
 import (
 	"context"
+	"time"
 )
+
+type HealthCheckManifest struct {
+	Name        string
+	Description string
+	StartedAt   time.Time
+	CrashedAt   *time.Time
+	LastError   error
+}
 
 type (
 	OnStart interface {
@@ -14,5 +23,9 @@ type (
 	OnStartStop interface {
 		OnStart
 		OnStop
+	}
+	HealthCheck interface {
+		OnStartStop
+		Inspect() HealthCheckManifest
 	}
 )
