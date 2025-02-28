@@ -60,7 +60,6 @@ func NewHandler[Request any, Response any](
 	if operationId == "reflectValue" {
 		operationId = operationIdFromCaller(2)
 	}
-	fmt.Println(operationId)
 	options := Options{
 		Method:          method,
 		Path:            path,
