@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	trace2 "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 	"go.uber.org/multierr"
 
 	"github.com/kiwiworks/rodent/errors"
@@ -41,40 +42,52 @@ func New(manifest *manifest.Manifest) (*Telemetry, error) {
 	propagator := newPropagator()
 	otel.SetTextMapPropagator(propagator)
 
-	traceExporter, err := newTraceExporter(ctx, os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create trace exporter")
-	}
-	t.traceExporter = traceExporter
-	traceProvider, err := newTracerProvider(traceExporter, t.manifest)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create trace provider")
-	}
-	t.traceProvider = traceProvider
-	otel.SetTracerProvider(traceProvider)
+	// Set up telemetry only if OTEL endpoint is configured
+	if hasOtelEndpoint() {
+		traceExporter, err := newTraceExporter(ctx, os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"))
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create trace exporter")
+		}
+		t.traceExporter = traceExporter
+		traceProvider, err := newTracerProvider(traceExporter, t.manifest)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create trace provider")
+		}
+		t.traceProvider = traceProvider
+		otel.SetTracerProvider(traceProvider)
 
-	httpMetricExporter, err := newHttpMetricExporter(ctx)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create metric exporter")
-	}
-	meterProvider, err := newMeterProvider(httpMetricExporter)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create metric provider")
-	}
-	otel.SetMeterProvider(meterProvider)
-	t.meterProvider = meterProvider
+		httpMetricExporter, err := newHttpMetricExporter(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create metric exporter")
+		}
+		meterProvider, err := newMeterProvider(httpMetricExporter)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create metric provider")
+		}
+		otel.SetMeterProvider(meterProvider)
+		t.meterProvider = meterProvider
 
-	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") != "" {
 		if err = runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {
 			return nil, errors.Wrapf(err, "failed to start runtime")
 		}
+	} else {
+		// Set up no-op providers when no OTEL endpoint is configured
+		noopProvider := noop.NewTracerProvider()
+		t.traceProvider = nil // We'll use the noop provider via the Tracer method
+		otel.SetTracerProvider(noopProvider)
+		t.meterProvider = metric.NewMeterProvider()
+		otel.SetMeterProvider(t.meterProvider)
 	}
+
 	return t, nil
 }
 
 func (t *Telemetry) Tracer(name string) trace2.Tracer {
-	tracer := t.traceProvider.Tracer(name)
-	return tracer
+	if t.traceProvider == nil {
+		// If no trace provider exists, return a no-op tracer
+		return noop.NewTracerProvider().Tracer(name)
+	}
+	return t.traceProvider.Tracer(name)
 }
 
 func newPropagator() propagation.TextMapPropagator {
@@ -114,11 +127,30 @@ func newTraceExporter(ctx context.Context, protocol string) (*otlptrace.Exporter
 	if protocol == "" {
 		protocol = "http"
 	}
+
 	switch protocol {
 	case "grpc":
-		client = otlptracegrpc.NewClient()
+		opts := []otlptracegrpc.Option{}
+
+		// Use explicitly defined endpoint if available
+		if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"); endpoint != "" {
+			opts = append(opts, otlptracegrpc.WithEndpoint(endpoint))
+		} else if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+			opts = append(opts, otlptracegrpc.WithEndpoint(endpoint))
+		}
+
+		client = otlptracegrpc.NewClient(opts...)
 	case "http":
-		client = otlptracehttp.NewClient()
+		opts := []otlptracehttp.Option{}
+
+		// Use explicitly defined endpoint if available
+		if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"); endpoint != "" {
+			opts = append(opts, otlptracehttp.WithEndpoint(endpoint))
+		} else if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+			opts = append(opts, otlptracehttp.WithEndpoint(endpoint))
+		}
+
+		client = otlptracehttp.NewClient(opts...)
 	default:
 		return nil, errors.Newf("unsupported protocol: %s", protocol)
 	}
@@ -131,7 +163,17 @@ func newTraceExporter(ctx context.Context, protocol string) (*otlptrace.Exporter
 }
 
 func newHttpMetricExporter(ctx context.Context) (*otlpmetrichttp.Exporter, error) {
-	exporter, err := otlpmetrichttp.New(ctx)
+	// Configure the metric exporter with explicit options
+	opts := []otlpmetrichttp.Option{}
+
+	// Use explicitly defined endpoint if available
+	if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"); endpoint != "" {
+		opts = append(opts, otlpmetrichttp.WithEndpoint(endpoint))
+	} else if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+		opts = append(opts, otlpmetrichttp.WithEndpoint(endpoint))
+	}
+
+	exporter, err := otlpmetrichttp.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create metric exporter")
 	}
@@ -145,17 +187,61 @@ func newMeterProvider(httpMetricExporter *otlpmetrichttp.Exporter) (*metric.Mete
 	return meterProvider, nil
 }
 
+// hasOtelEndpoint checks if any OTEL endpoint environment variables are set
+func hasOtelEndpoint() bool {
+	// Check for standard OTEL endpoint variables
+	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
+		return true
+	}
+	if os.Getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT") != "" {
+		return true
+	}
+	if os.Getenv("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT") != "" {
+		return true
+	}
+
+	// Check HTTP specific endpoints
+	if os.Getenv("OTEL_EXPORTER_OTLP_HTTP_ENDPOINT") != "" {
+		return true
+	}
+	if os.Getenv("OTEL_EXPORTER_OTLP_TRACES_HTTP_ENDPOINT") != "" {
+		return true
+	}
+	if os.Getenv("OTEL_EXPORTER_OTLP_METRICS_HTTP_ENDPOINT") != "" {
+		return true
+	}
+
+	// Check GRPC specific endpoints
+	if os.Getenv("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT") != "" {
+		return true
+	}
+	if os.Getenv("OTEL_EXPORTER_OTLP_TRACES_GRPC_ENDPOINT") != "" {
+		return true
+	}
+	if os.Getenv("OTEL_EXPORTER_OTLP_METRICS_GRPC_ENDPOINT") != "" {
+		return true
+	}
+
+	// If protocol is set but no endpoints, don't enable telemetry by default
+	// as that leads to connection errors with default localhost endpoints
+	return false
+}
+
 func (t *Telemetry) OnStop(ctx context.Context) error {
 	var err error
-	if os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL") != "" {
-		if err = t.traceProvider.Shutdown(ctx); err != nil {
-			err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown tracer provider"))
+	if hasOtelEndpoint() && t.traceExporter != nil {
+		if t.traceProvider != nil {
+			if err = t.traceProvider.Shutdown(ctx); err != nil {
+				err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown tracer provider"))
+			}
 		}
 		if err = t.traceExporter.Shutdown(ctx); err != nil {
 			err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown trace exporter"))
 		}
-		if err = t.meterProvider.Shutdown(ctx); err != nil {
-			err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown meter provider"))
+		if t.meterProvider != nil {
+			if err = t.meterProvider.Shutdown(ctx); err != nil {
+				err = multierr.Combine(err, errors.Wrapf(err, "failed to shutdown meter provider"))
+			}
 		}
 		t.cancel()
 	}
