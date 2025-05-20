@@ -28,12 +28,12 @@ func New(endpoint string, opts ...opt.Option[Config]) (*Client, error) {
 func (c Client) Request(method, path string, opts ...opt.Option[Request]) *Request {
 	endpoint := c.endpoint.JoinPath(path)
 	request := Request{
-		method:   method,
-		endpoint: *endpoint,
-		values:   make(url.Values),
-		headers:  make(http.Header),
-		errors:   []error{},
-		timeout:  c.cfg.Timeout,
+		Method:   method,
+		Endpoint: *endpoint,
+		Values:   make(url.Values),
+		Headers:  make(http.Header),
+		Errors:   []error{},
+		Timeout:  c.cfg.Timeout,
 	}
 	opt.Apply(&request, opts...)
 	return &request

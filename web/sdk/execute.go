@@ -20,18 +20,18 @@ import (
 )
 
 func checkRequestErrors(request *Request) error {
-	if len(request.errors) != 0 {
-		return errors.Wrapf(multierr.Combine(request.errors...), "'%s': malformed request", request.endpoint.String())
+	if len(request.Errors) != 0 {
+		return errors.Wrapf(multierr.Combine(request.Errors...), "'%s': malformed request", request.Endpoint.String())
 	}
 	return nil
 }
 
 func buildURLWithQueryParams(request *Request) url.URL {
-	query := request.endpoint.Query()
-	for k, v := range request.values {
+	query := request.Endpoint.Query()
+	for k, v := range request.Values {
 		query.Set(k, strings.Join(v, ","))
 	}
-	u := request.endpoint
+	u := request.Endpoint
 	u.RawQuery = query.Encode()
 	return u
 }
@@ -95,7 +95,7 @@ func Execute[Response any](
 	endpoint Client,
 	request *Request,
 ) (*Response, error) {
-	log := logger.FromContext(ctx).With(props.HttpMethod(request.method))
+	log := logger.FromContext(ctx).With(props.HttpMethod(request.Method))
 	cfg := endpoint.cfg
 
 	if err := checkRequestErrors(request); err != nil {
@@ -104,12 +104,12 @@ func Execute[Response any](
 
 	urlWithQueryParams := buildURLWithQueryParams(request)
 
-	requestCtx, cancel := createContextWithTimeout(ctx, request.timeout)
+	requestCtx, cancel := createContextWithTimeout(ctx, request.Timeout)
 	defer cancel()
 
-	req, err := buildHTTPRequest(requestCtx, request.method, urlWithQueryParams.String(), request.body, request.headers)
+	req, err := buildHTTPRequest(requestCtx, request.Method, urlWithQueryParams.String(), request.Body, request.Headers)
 	if err != nil {
-		return nil, errors.Wrapf(err, "'%s': could not build a valid request", request.endpoint.String())
+		return nil, errors.Wrapf(err, "'%s': could not build a valid request", request.Endpoint.String())
 	}
 	log = log.With(props.HttpPath(req.URL.String()))
 

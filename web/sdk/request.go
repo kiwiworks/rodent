@@ -20,18 +20,18 @@ import (
 )
 
 type Request struct {
-	method   string
-	endpoint url.URL
-	values   url.Values
-	headers  http.Header
-	body     io.ReadCloser
-	errors   []error
-	timeout  time.Duration
+	Method   string
+	Endpoint url.URL
+	Values   url.Values
+	Headers  http.Header
+	Body     io.ReadCloser
+	Errors   []error
+	Timeout  time.Duration
 }
 
 func WithTimeout(ttl time.Duration) opt.Option[Request] {
 	return func(opt *Request) {
-		opt.timeout = ttl
+		opt.Timeout = ttl
 	}
 }
 
@@ -40,20 +40,20 @@ func WithJsonBody[Body any](value Body) opt.Option[Request] {
 		WithHeader(header.ContentType, header.ContentTypeJson)(request)
 		buf, err := json.Marshal(value)
 		if err != nil {
-			request.errors = append(request.errors, errors.Wrapf(err, "JSON serialization of body '%T' failed", value))
+			request.Errors = append(request.Errors, errors.Wrapf(err, "JSON serialization of body '%T' failed", value))
 			return
 		}
 
 		// why this ? because it allows us to use file upload or more complex types (ie: multipart/streaming)
 		// down the line without changing the ease of use of the API
-		request.body = io.NopCloser(bytes.NewReader(buf))
+		request.Body = io.NopCloser(bytes.NewReader(buf))
 	}
 }
 
 func WithMultipartFormBody(formWriter multipart.Writer, value *bytes.Buffer) opt.Option[Request] {
 	return func(request *Request) {
 		WithHeader(header.ContentType, formWriter.FormDataContentType())(request)
-		request.body = io.NopCloser(value)
+		request.Body = io.NopCloser(value)
 	}
 }
 
@@ -62,29 +62,29 @@ func WithFormBody[Body any](value Body) opt.Option[Request] {
 		WithHeader(header.ContentType, header.ContentTypeForm)(request)
 		buf, err := query.Values(value)
 		if err != nil {
-			request.errors = append(request.errors, errors.Wrapf(err, "Form serialization of body '%T' failed", value))
+			request.Errors = append(request.Errors, errors.Wrapf(err, "Form serialization of body '%T' failed", value))
 			return
 		}
 
 		// why this ? because it allows us to use file upload or more complex types (ie: multipart/streaming)
 		// down the line without changing the ease of use of the API
-		request.body = io.NopCloser(strings.NewReader(buf.Encode()))
+		request.Body = io.NopCloser(strings.NewReader(buf.Encode()))
 	}
 }
 
 func WithHeader(name string, value string) opt.Option[Request] {
 	return func(request *Request) {
 		// yeah, go headers can have multiple values 🤷
-		request.headers[name] = []string{value}
+		request.Headers[name] = []string{value}
 	}
 }
 
 func WithQueryParam(name string, value string) opt.Option[Request] {
 	return func(request *Request) {
-		if _, ok := request.values[name]; !ok {
-			request.values[name] = []string{value}
+		if _, ok := request.Values[name]; !ok {
+			request.Values[name] = []string{value}
 		} else {
-			request.values[name] = append(request.values[name], value)
+			request.Values[name] = append(request.Values[name], value)
 		}
 	}
 }
@@ -104,7 +104,7 @@ func WithQueryInt(name string, value any) opt.Option[Request] {
 		case int64:
 			upcast = v
 		default:
-			request.errors = append(request.errors, errors.Newf("invalid type '%T' for query param '%s' wanted int|int8|int16|int32|int64", value, name))
+			request.Errors = append(request.Errors, errors.Newf("invalid type '%T' for query param '%s' wanted int|int8|int16|int32|int64", value, name))
 			return
 		}
 		str := strconv.FormatInt(upcast, 10)
@@ -121,7 +121,7 @@ func WithQueryFloat(name string, value any) opt.Option[Request] {
 		case float64:
 			upcast = v
 		default:
-			request.errors = append(request.errors, errors.Newf("invalid type '%T' for query param '%s' wanted float32|float64", value, name))
+			request.Errors = append(request.Errors, errors.Newf("invalid type '%T' for query param '%s' wanted float32|float64", value, name))
 			return
 		}
 		str := strconv.FormatFloat(upcast, 'f', -1, 64) // 'f' for decimal notation
@@ -141,9 +141,9 @@ func WithQueryStruct[T any](value T) opt.Option[Request] {
 	return func(request *Request) {
 		values, err := query.Values(value)
 		if err != nil {
-			request.errors = append(request.errors, errors.Wrapf(err, "Query serialization of body '%T' failed", value))
+			request.Errors = append(request.Errors, errors.Wrapf(err, "Query serialization of body '%T' failed", value))
 			return
 		}
-		request.values = maps.Merged(request.values, values)
+		request.Values = maps.Merged(request.Values, values)
 	}
 }
