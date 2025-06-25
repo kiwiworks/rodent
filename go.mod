@@ -7,7 +7,7 @@ require (
 	github.com/biter777/countries v1.7.5
 	github.com/coreos/go-semver v0.3.1
 	github.com/danielgtaylor/huma/v2 v2.30.0
-	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.1
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.6.0
