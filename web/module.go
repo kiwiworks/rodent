@@ -9,10 +9,12 @@ import (
 
 func Module() app.Module {
 	return app.NewModule(
-		module.Public(
+		module.Private(
 			server.NewMux,
 			server.NewHuma,
 			server.NewRouter,
+		),
+		module.Public(
 			server.New,
 		),
 		module.Service[server.Server](),

@@ -54,3 +54,55 @@ func Intersects[T comparable](slice []T, values []T) bool {
 	}
 	return false
 }
+
+// All checks if all elements in a slice satisfy a given predicate function.
+// The function is generic and can operate on slices of any type.
+//
+// Parameters:
+//   - slice: The slice of elements to be checked.
+//   - predicate: A function that takes an element and returns a boolean.
+//
+// Returns:
+//   - bool: Returns true if all elements satisfy the predicate,
+//     otherwise returns false.
+//
+// Example usage:
+//   - All([]int{2, 4, 6}, func(x int) bool { return x%2 == 0 }) // returns true
+//   - All([]int{2, 3, 4}, func(x int) bool { return x%2 == 0 }) // returns false
+//
+// Type constraints:
+//   - T: The type of elements in the slice.
+func All[T any](slice []T, predicate func(T) bool) bool {
+	for _, v := range slice {
+		if !predicate(v) {
+			return false
+		}
+	}
+	return true
+}
+
+// Any checks if any element in a slice satisfies a given predicate function.
+// The function is generic and can operate on slices of any type.
+//
+// Parameters:
+//   - slice: The slice of elements to be checked.
+//   - predicate: A function that takes an element and returns a boolean.
+//
+// Returns:
+//   - bool: Returns true if any element satisfies the predicate,
+//     otherwise returns false.
+//
+// Example usage:
+//   - Any([]int{1, 2, 3}, func(x int) bool { return x == 2 }) // returns true
+//   - Any([]int{1, 3, 5}, func(x int) bool { return x%2 == 0 }) // returns false
+//
+// Type constraints:
+//   - T: The type of elements in the slice.
+func Any[T any](slice []T, predicate func(T) bool) bool {
+	for _, v := range slice {
+		if predicate(v) {
+			return true
+		}
+	}
+	return false
+}

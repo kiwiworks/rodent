@@ -34,3 +34,11 @@ func NewRouter(cfg RouterConfig) *Router {
 		authMiddleware: cfg.AuthMiddleware,
 	}
 }
+
+func (r *Router) Mux() *chi.Mux {
+	return r.mux
+}
+
+func (r *Router) API() huma.API {
+	return r.api
+}

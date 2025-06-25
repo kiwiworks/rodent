@@ -47,12 +47,12 @@ func (m *Middleware) Middleware(ctx huma.Context, next func(ctx huma.Context)) {
 
 	for _, security := range op.Security {
 		for name, scopes := range security {
-			//todo handle scopes
 			_ = scopes
 			provider, exists := m.providers[name]
 			if !exists {
-				log.Warn("operation defines a security scheme that is not supported: (missing provider)", zap.String("provider.name", name))
-				continue
+				log.Error("operation defines a security scheme that is not supported: (missing provider)", zap.String("provider.name", name))
+				m.writeError(ctx, 500, "internal server error: authentication provider not configured", nil)
+				return
 			}
 			user, err := provider.UserResolver(ctx)
 			if err != nil {

@@ -65,3 +65,7 @@ func (s *Server) OnStop(ctx context.Context) error {
 	log.Info("stopping server", zap.String("address", s.server.Addr))
 	return s.server.Shutdown(ctx)
 }
+
+func (s *Server) Router() *Router {
+	return s.router
+}
