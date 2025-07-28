@@ -45,6 +45,7 @@ func (m *Middleware) Middleware(ctx huma.Context, next func(ctx huma.Context)) {
 		return
 	}
 
+	// Try each security requirement (OR logic)
 	for _, security := range op.Security {
 		for name, scopes := range security {
 			_ = scopes
@@ -54,13 +55,18 @@ func (m *Middleware) Middleware(ctx huma.Context, next func(ctx huma.Context)) {
 				m.writeError(ctx, 500, "internal server error: authentication provider not configured", nil)
 				return
 			}
+
 			user, err := provider.UserResolver(ctx)
-			if err != nil {
-				m.writeError(ctx, 401, "could not resolve user from credentials", err)
+			if err == nil {
+				log.Info("authentication succeeded", zap.String("provider.name", name), zap.String("user.firstName", user.Firstname))
+				// Success! Use this authentication method
+				next(huma.WithContext(ctx, InjectUser(ctx.Context(), user)))
 				return
 			}
-			next(huma.WithContext(ctx, InjectUser(ctx.Context(), user)))
-			return
+			// Continue to try other authentication methods
 		}
 	}
+
+	// All authentication methods failed
+	m.writeError(ctx, 401, "authentication failed", nil)
 }
