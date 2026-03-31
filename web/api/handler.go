@@ -21,16 +21,18 @@ type (
 		Mount   func(api huma.API, config Config)
 	}
 	Options struct {
-		Method          http.Method
-		Path            string
-		RegisterOas3    bool
-		OperationId     string
-		ContentType     string
-		Tags            []string
-		Protected       bool
-		AuthProviders   []string
-		OAuth2Providers map[string][]string
-		Description     string
+		Method           http.Method
+		Path             string
+		RegisterOas3     bool
+		OperationId      string
+		ContentType      string
+		Tags             []string
+		Protected        bool
+		AuthProviders    []string
+		OAuth2Providers  map[string][]string
+		Description      string
+		Deprecated       bool
+		SuccessorVersion string
 	}
 )
 
@@ -80,6 +82,7 @@ func NewHandler[Request any, Response any](
 				Path:        options.Path,
 				OperationID: options.OperationId,
 				Tags:        options.Tags,
+				Deprecated:  options.Deprecated,
 				Security:    []map[string][]string{},
 			}
 			for _, authProvider := range options.AuthProviders {
@@ -87,6 +90,14 @@ func NewHandler[Request any, Response any](
 			}
 			for oauth2provider, scopes := range options.OAuth2Providers {
 				op.Security = append(op.Security, map[string][]string{oauth2provider: scopes})
+			}
+			if options.Deprecated && options.SuccessorVersion != "" {
+				successor := options.SuccessorVersion
+				op.Middlewares = append(op.Middlewares, func(ctx huma.Context, next func(huma.Context)) {
+					ctx.SetHeader("Deprecation", "true")
+					ctx.SetHeader("Link", fmt.Sprintf("<%s>; rel=\"successor-version\"", successor))
+					next(ctx)
+				})
 			}
 			huma.Register(api, op, func(ctx context.Context, i *Request) (*Response, error) {
 				log := logger.FromContext(ctx).With(props.Oas3OperationId(options.OperationId))

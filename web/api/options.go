@@ -31,3 +31,13 @@ func OperationID(operationID string) opt.Option[Options] {
 		opt.OperationId = operationID
 	}
 }
+
+// Deprecated marks this endpoint as deprecated in the OpenAPI spec.
+// successorPath is the v2 equivalent (e.g., "/api/v2/persons") — included in
+// the Deprecation response header as a Link rel="successor-version".
+func Deprecated(successorPath string) opt.Option[Options] {
+	return func(opt *Options) {
+		opt.Deprecated = true
+		opt.SuccessorVersion = successorPath
+	}
+}
