@@ -38,24 +38,29 @@ func NewRoot(params RootParams) (*Root, error) {
 	edges := make(map[string][]string)
 	allCobraCommands[rootCmd.Name()] = rootCmd
 	for _, cmd := range params.Commands {
-		allCommands[cmd.Name] = cmd
+		fullName := cmd.FullName()
+		if _, exists := allCommands[fullName]; exists {
+			return nil, errors.Newf("command `%s` is already registered", fullName)
+		}
+		allCommands[fullName] = cmd
 		if cmd.ChildOf != nil && len(cmd.ChildOf) > 0 {
 			parentCount := len(cmd.ChildOf)
-			for idx, parent := range cmd.ChildOf {
-				var child string
+			for idx := range cmd.ChildOf {
+				parentPath := strings.Join(cmd.ChildOf[:idx+1], ".")
+				var childPath string
 				if idx == parentCount-1 {
-					child = cmd.Name
+					childPath = fullName
 				} else {
-					child = cmd.ChildOf[idx+1]
+					childPath = strings.Join(cmd.ChildOf[:idx+2], ".")
 				}
-				edges[parent] = append(edges[parent], child)
+				edges[parentPath] = append(edges[parentPath], childPath)
 			}
 		} else {
-			edges[rootCmd.Name()] = append(edges[rootCmd.Name()], cmd.Name)
+			edges[rootCmd.Name()] = append(edges[rootCmd.Name()], fullName)
 		}
 		cobraCmd := cmd.asCobraCommand()
-		allCobraCommands[cmd.Name] = cobraCmd
-		log.Debug("added new command", zap.String("command.short", cobraCmd.Short))
+		allCobraCommands[fullName] = cobraCmd
+		log.Debug("added new command", zap.String("command.name", fullName), zap.String("command.short", cobraCmd.Short))
 	}
 	for parent, children := range edges {
 		parentCmd, exists := allCobraCommands[parent]
