@@ -53,6 +53,16 @@ func New(name string, short string, long string, opts ...opt.Option[Command]) *C
 	return cmd
 }
 
+// FullName returns the command's fully-qualified dotted path (e.g. "group.leaf"),
+// reassembling what New split off into ChildOf. It is the identity used to
+// register commands, so two commands only collide if they share the full path.
+func (c *Command) FullName() string {
+	parts := make([]string, 0, len(c.ChildOf)+1)
+	parts = append(parts, c.ChildOf...)
+	parts = append(parts, c.Name)
+	return strings.Join(parts, ".")
+}
+
 func (c *Command) asCobraCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:        c.Name,
